@@ -99,3 +99,7 @@ class SLIMCoefficientConstraints:
         x.add_column("ub", list(self.ub))
         x.add_column("C_0j", list(self.C_0j))
         print(x)
+        
+    def __len__(self):
+        # Return the number of variables
+        return self.P
