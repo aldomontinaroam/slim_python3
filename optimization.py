@@ -100,13 +100,13 @@ def create_slim_IP(input_data, print_flag=False):
     error_names = [f"error_{i}" for i in range(N)]
 
     slim_IP.variables.add(
-        obj=[0.0] * P + [C_0] * P + [w_pos] * N,
-        lb=rho_lb.tolist() + [0] * P + [0] * N,
-        ub=rho_ub.tolist() + [1] * P + [1] * N,
-        types="I" * P + "B" * P + "B" * N,
+        obj=([0.0] * P + C_0.tolist() + [w_pos] * N),  # Ensure C_0 is converted to a list
+        lb=(rho_lb.tolist() + [0] * P + [0] * N),
+        ub=(rho_ub.tolist() + [1] * P + [1] * N),
+        types=("I" * P + "B" * P + "B" * N),
         names=rho_names + alpha_names + error_names
     )
-
+    
     # Add L0-norm constraints
     for j in range(P):
         slim_IP.linear_constraints.add(
