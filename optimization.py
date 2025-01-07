@@ -27,7 +27,7 @@ def create_slim_IP(input_data, print_flag=False):
 
     X = input_data['X']
     Y = input_data['Y']
-    XY = X * Y
+    XY = X * Y[:, np.newaxis]  # Align shapes for element-wise multiplication
 
     # Sizes
     N = X.shape[0]
