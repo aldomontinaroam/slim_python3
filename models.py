@@ -9,9 +9,9 @@ def fit_slim_model(X, Y, constraints):
     """
     # Prepare input for create_slim_IP
     input_data = {
-        'X': X_train.to_numpy(),
-        'Y': y_train,
-        'X_names': X_train.columns.tolist(),  # Include feature names
+        'X': X.to_numpy(),
+        'Y': Y,
+        'X_names': X.columns.tolist(),  # Include feature names
         'constraints': constraints
     }
     
