@@ -1,3 +1,4 @@
+from .optimization import *
 def fit_slim_model(X, Y, constraints):
     """
     Fit SLIM model to given data
