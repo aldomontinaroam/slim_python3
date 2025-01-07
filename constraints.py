@@ -1,13 +1,63 @@
 import numpy as np
+from prettytable import PrettyTable
 
 class SLIMCoefficientConstraints:
+
+    def check_string_input(self, input_name, input_value):
+        if isinstance(input_value, np.ndarray):
+
+            if input_value.size == self.P:
+                setattr(self, input_name, input_value)
+            elif input_value.size == 1:
+                setattr(self, input_name, np.repeat(input_value, self.P))
+            else:
+                raise ValueError(f"length of {input_name} is {input_value.size}; should be {self.P}")
+
+        elif isinstance(input_value, str):
+            setattr(self, input_name, float(input_value) * np.ones(self.P))
+
+        elif isinstance(input_value, list):
+            if len(input_value) == self.P:
+                setattr(self, input_name, np.array([str(x) for x in input_value]))
+            elif len(input_value) == 1:
+                setattr(self, input_name, np.repeat(input_value, self.P))
+            else:
+                raise ValueError(f"length of {input_name} is {len(input_value)}; should be {self.P}")
+
+        else:
+            raise ValueError(f"user provided {input_name} with an unsupported type")
+
+    def check_numeric_input(self, input_name, input_value):
+        if isinstance(input_value, np.ndarray):
+
+            if input_value.size == self.P:
+                setattr(self, input_name, input_value)
+            elif input_value.size == 1:
+                setattr(self, input_name, input_value * np.ones(self.P))
+            else:
+                raise ValueError(f"length of {input_name} is {input_value.size}; should be {self.P}")
+
+        elif isinstance(input_value, (float, int)):
+            setattr(self, input_name, float(input_value) * np.ones(self.P))
+
+        elif isinstance(input_value, list):
+            if len(input_value) == self.P:
+                setattr(self, input_name, np.array([float(x) for x in input_value]))
+            elif len(input_value) == 1:
+                setattr(self, input_name, np.array([float(x) for x in input_value]) * np.ones(self.P))
+            else:
+                raise ValueError(f"length of {input_name} is {len(input_value)}; should be {self.P}")
+
+        else:
+            raise ValueError(f"user provided {input_name} with an unsupported type")
+
     def __init__(self, **kwargs):
         if 'variable_names' in kwargs:
             variable_names = kwargs.get('variable_names')
             P = len(variable_names)
         elif 'P' in kwargs:
             P = kwargs.get('P')
-            variable_names = ["x_" + str(i) for i in range(1, P + 1)]
+            variable_names = [f"x_{i}" for i in range(1, P + 1)]
         else:
             raise ValueError("user needs to provide 'P' or 'variable_names'")
 
@@ -23,61 +73,31 @@ class SLIMCoefficientConstraints:
         C_0j = kwargs.get('C0_j', np.nan * np.ones(P))
         sign = kwargs.get('sign', np.nan * np.ones(P))
 
-        self.ub = self._check_numeric_input('ub', ub)
-        self.lb = self._check_numeric_input('lb', lb)
-        self.C_0j = self._check_numeric_input('C_0j', C_0j)
-        self.sign = self._check_numeric_input('sign', sign)
-        self.vtype = self._check_string_input('vtype', vtype)
+        self.check_numeric_input('ub', ub)
+        self.check_numeric_input('lb', lb)
+        self.check_numeric_input('C_0j', C_0j)
+        self.check_numeric_input('sign', sign)
+        self.check_string_input('vtype', vtype)
 
         if self.check_flag:
             self.check_set()
         if self.print_flag:
             self.view()
 
-    def _check_string_input(self, input_name, input_value):
-        if isinstance(input_value, np.ndarray):
-            if input_value.size == self.P:
-                return input_value
-            elif input_value.size == 1:
-                return np.repeat(input_value, self.P)
-            else:
-                raise ValueError(f"length of {input_name} is {input_value.size}; should be {self.P}")
-        elif isinstance(input_value, str):
-            return np.array([input_value] * self.P, dtype=str)
-        elif isinstance(input_value, list):
-            if len(input_value) == self.P:
-                return np.array([str(x) for x in input_value])
-            elif len(input_value) == 1:
-                return np.repeat(input_value, self.P)
-            else:
-                raise ValueError(f"length of {input_name} is {len(input_value)}; should be {self.P}")
-        else:
-            raise ValueError(f"unsupported type for {input_name}")
-
-    def _check_numeric_input(self, input_name, input_value):
-        if isinstance(input_value, np.ndarray):
-            if input_value.size == self.P:
-                return input_value
-            elif input_value.size == 1:
-                return input_value * np.ones(self.P)
-            else:
-                raise ValueError(f"length of {input_name} is {input_value.size}; should be {self.P}")
-        elif isinstance(input_value, (float, int)):
-            return float(input_value) * np.ones(self.P)
-        elif isinstance(input_value, list):
-            if len(input_value) == self.P:
-                return np.array([float(x) for x in input_value])
-            elif len(input_value) == 1:
-                return np.array([float(input_value[0])] * self.P)
-            else:
-                raise ValueError(f"length of {input_name} is {len(input_value)}; should be {self.P}")
-        else:
-            raise ValueError(f"unsupported type for {input_name}")
+    def __len__(self):
+        return self.P
 
     def check_set(self):
+
         for i in range(len(self.variable_names)):
+
             if self.ub[i] < self.lb[i]:
-                self.ub[i], self.lb[i] = self.lb[i], self.ub[i]
+                if self.print_flag:
+                    print(f"fixed issue: ub < lb for variable {self.variable_names[i]}")
+                ub = self.ub[i]
+                lb = self.lb[i]
+                self.ub[i] = lb
+                self.lb[i] = ub
 
             if self.sign[i] > 0 and self.lb[i] < 0:
                 self.lb[i] = 0.0
@@ -87,19 +107,78 @@ class SLIMCoefficientConstraints:
 
             if self.variable_names[i] in {'Intercept', '(Intercept)', 'intercept', '(intercept)'}:
                 if self.C_0j[i] > 0 or np.isnan(self.C_0j[i]):
-                    self.C_0j[i] = 0.0
+                    if self.print_flag:
+                        print(f"found intercept variable with penalty value of C_0j = {self.C_0j[i]:.4f}")
+                    if self.fix_flag:
+                        if self.print_flag:
+                            print("setting C_0j for intercept to 0.0 to ensure that intercept is not penalized")
+                        self.C_0j[i] = 0.0
+
+    def get_field_as_nparray(self, field_name):
+        return np.array(getattr(self, field_name))
+
+    def get_field_as_list(self, field_name):
+        return np.array(getattr(self, field_name)).tolist()
+
+    def set_field(self, field_name, variable_names, field_values):
+
+        curr_values = getattr(self, field_name)
+
+        if isinstance(variable_names, str):
+
+            variable_names = [variable_names]
+            if isinstance(field_values, list):
+                if len(field_values) == 1:
+                    pass
+                else:
+                    raise ValueError("user provided multiple values for single field")
+
+            elif isinstance(field_values, np.ndarray):
+                if len(field_values) == 1:
+                    pass
+                else:
+                    raise ValueError("user provided multiple values for single field")
+                field_values = field_values.tolist()
+
+            else:
+                field_values = [field_values]
+
+        elif isinstance(variable_names, list):
+
+            if isinstance(field_values, list):
+                if len(field_values) != len(variable_names):
+                    raise ValueError("length of variable names and values do not match")
+
+            elif isinstance(field_values, np.ndarray):
+                if len(field_values) != len(variable_names):
+                    raise ValueError("length of variable names and values do not match")
+                field_values = field_values.tolist()
+
+            else:
+                field_values = [field_values] * len(variable_names)
+
+        for variable_name in variable_names:
+
+            if variable_name in self.variable_names:
+                user_ind = variable_names.index(variable_name)
+                self_ind = self.variable_names.index(variable_name)
+                curr_values[self_ind] = field_values[user_ind]
+            else:
+                if self.print_flag:
+                    print(f"warning: Lset object does not contain variable with name: {variable_name}")
+
+        if self.check_flag:
+            self.check_set()
+        if self.print_flag:
+            self.view()
 
     def view(self):
         x = PrettyTable()
         x.align = "r"
         x.add_column("variable_name", self.variable_names)
-        x.add_column("vtype", list(self.vtype))
-        x.add_column("sign", list(self.sign))
-        x.add_column("lb", list(self.lb))
-        x.add_column("ub", list(self.ub))
-        x.add_column("C_0j", list(self.C_0j))
+        x.add_column("vtype", self.get_field_as_list('vtype'))
+        x.add_column("sign", self.get_field_as_list('sign'))
+        x.add_column("lb", self.get_field_as_list('lb'))
+        x.add_column("ub", self.get_field_as_list('ub'))
+        x.add_column("C_0j", self.get_field_as_list('C_0j'))
         print(x)
-        
-    def __len__(self):
-        # Return the number of variables
-        return self.P
