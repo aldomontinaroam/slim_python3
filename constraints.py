@@ -1,3 +1,5 @@
+import numpy as np
+
 class SLIMCoefficientConstraints:
     def __init__(self, **kwargs):
         if 'variable_names' in kwargs:
