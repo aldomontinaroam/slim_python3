@@ -1,3 +1,4 @@
+import cplex
 def create_slim_IP(input_data, print_flag=False):
     """
     Create SLIM Integer Programming model
