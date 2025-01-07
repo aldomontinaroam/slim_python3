@@ -6,7 +6,21 @@ def fit_slim_model(X, Y, constraints):
     :param Y: Target labels
     :param constraints: SLIMCoefficientConstraints
     """
-    slim_ip, slim_info = create_slim_IP({'X': X, 'Y': Y, 'constraints': constraints})
+    # Prepare input for create_slim_IP
+    input_data = {
+        'X': X_train.to_numpy(),
+        'Y': y_train,
+        'X_names': X_train.columns.tolist(),  # Include feature names
+        'constraints': constraints
+    }
+    
+    # Create SLIM Integer Programming model
+    slim_ip, slim_info = create_slim_IP(input_data)
+    
+    # Solve the model
     slim_ip.solve()
-
-    return slim_ip.solution.get_values()
+    
+    # Extract the coefficients from the solution
+    coefficients = slim_ip.solution.get_values()
+    
+    return coefficients, slim_info
