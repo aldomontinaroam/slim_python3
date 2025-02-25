@@ -2,7 +2,7 @@
 try:
     from setuptools import setup, Extension
 except ImportError:
-    from distutils.core import setup, Extension
+    from distutils.core import setup, Extension, find_packages
 
 setup(name='slim_python',
       version='1.0',
@@ -13,5 +13,5 @@ setup(name='slim_python',
       author='Berk Ustun',
       author_email='ustunb@mit.edu',
       url='https://www.berkustun.com/',
-      packages=['slim_python'],
+      packages=find_packages(),
       )
