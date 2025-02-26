@@ -3,6 +3,7 @@ import sys
 import time
 import numpy as np
 import cplex
+from cplex.exceptions import CplexError
 import warnings
 from prettytable import PrettyTable
 
@@ -367,7 +368,7 @@ def get_rho_summary(rho, slim_info, X, Y):
     printed_model = print_slim_model(rho, X_names = slim_info['X_names'], Y_name = slim_info['Y_name'], show_omitted_variables = False)
 
     #transform Y
-    y = np.array(Y.flatten(), dtype = np.float)
+    y = np.array(Y.flatten(), dtype=float)  # or dtype=np.float64
     pos_ind = y == 1
     neg_ind = ~pos_ind
     N = len(Y)
