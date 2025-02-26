@@ -3,7 +3,9 @@ from prettytable import PrettyTable
 
 
 class SLIMCoefficientConstraints(object):
-
+    """
+    This class ensures that constraints on model coefficients, such as upper and lower bounds, variable types, and penalties, are properly set and validated.
+    """
     def check_string_input(self, input_name, input_value):
         if type(input_value) is np.array:
 
@@ -68,11 +70,11 @@ class SLIMCoefficientConstraints(object):
         self.check_flag = kwargs.get('check_flag', True)
         self.print_flag = kwargs.get('print_flag', False)
 
-        ub = kwargs.get('ub', 10.0 * np.ones(P))
-        lb = kwargs.get('lb', -10.0 * np.ones(P))
-        vtype = kwargs.get('type', ['I']*P)
-        C_0j = kwargs.get('C0_j', np.nan*np.ones(P))
-        sign = kwargs.get('sign', np.nan*np.ones(P))
+        ub = kwargs.get('ub', 10.0 * np.ones(P)) # upper bound
+        lb = kwargs.get('lb', -10.0 * np.ones(P)) # lower bound
+        vtype = kwargs.get('type', ['I']*P) # variable type
+        C_0j = kwargs.get('C0_j', np.nan*np.ones(P)) # penalty term
+        sign = kwargs.get('sign', np.nan*np.ones(P)) # constraint on sign
 
         self.check_numeric_input('ub', ub)
         self.check_numeric_input('lb', lb)
@@ -87,7 +89,11 @@ class SLIMCoefficientConstraints(object):
         return self.P
 
     def check_set(self):
-
+        """
+        - Ensures upper bounds (ub) are not lower than lower bounds (lb).
+        - Adjusts sign constraints: If sign[i] > 0, forces lb[i] ≥ 0; If sign[i] < 0, forces ub[i] ≤ 0
+        - Ensures the intercept is not penalized (C_0j = 0).
+        """
         for i in range(0, len(self.variable_names)):
 
             if self.ub[i] < self.lb[i]:
