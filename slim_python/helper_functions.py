@@ -377,7 +377,7 @@ def get_rho_summary(rho, slim_info, X, Y):
 
     #get predictions
     yhat = X.dot(rho) > 0
-    yhat = np.array(yhat, dtype = np.float)
+    yhat = np.array(yhat, dtype = float)
     yhat[yhat == 0] = -1
 
     true_positives = np.sum(yhat[pos_ind] == 1)
