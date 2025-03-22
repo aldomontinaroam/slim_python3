@@ -49,6 +49,7 @@ def load_data(csv_path, outcome_col=0, zero_to_neg_one=True):
     X_names = [data_headers[j] for j in X_col_idx]
 
     # insert a column of ones to X for the intercept
+    N = data.shape[0]
     X = np.insert(arr = X, obj = 0, values = np.ones(N), axis = 1)
     X_names.insert(0, '(Intercept)')
 
