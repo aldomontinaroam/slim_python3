@@ -32,7 +32,7 @@ def create_slim_IP(input, print_flag = False):
     assert input['X'].shape[1] == len(input['X_names'])
     assert all((input['Y'] == 1) | (input['Y'] == -1))
 
-    XY = input['X'] * input['Y']
+    XY = input['X'] * input['Y'][:, np.newaxis]
 
     #sizes
     N = input['X'].shape[0]
