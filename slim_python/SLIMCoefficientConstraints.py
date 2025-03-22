@@ -133,13 +133,13 @@ class SLIMCoefficientConstraints(object):
 
             variable_names = [variable_names]
             if type(field_values) is list:
-                if len(field_values) is 1:
+                if len(field_values) == 1:
                     pass
                 else:
                     raise ValueError("user provided multiple values for single field")
 
             elif type(field_values) is np.ndarray:
-                if len(field_values) is 1:
+                if len(field_values) == 1:
                     pass
                 else:
                     raise ValueError("user provided multiple values for single field")
