@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 try:
-    from setuptools import setup, Extension
+    from setuptools import setup, Extension, find_packages
 except ImportError:
     from distutils.core import setup, Extension, find_packages
 
