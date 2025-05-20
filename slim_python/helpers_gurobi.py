@@ -7,7 +7,10 @@ import re
 from prettytable import PrettyTable
 import gurobipy as gp
 from gurobipy import GRB, GurobiError
+from sklearn.metrics import classification_report
 
+def _safe_divide(n, d):
+        return n / d if d != 0 else np.nan
 
 class slimGurobiHelpers:
     """Raccolta di utility indipendenti dallo stato: tutti i metodi sono statici."""
@@ -297,24 +300,45 @@ class slimGurobiHelpers:
         yhat = np.array(yhat, dtype = float)
         yhat[yhat == 0] = -1
 
-        true_positives = np.sum(yhat[pos_ind] == 1)
-        false_positives = np.sum(yhat[neg_ind] == 1)
-        true_negatives= np.sum(yhat[neg_ind] == -1)
-        false_negatives = np.sum(yhat[pos_ind] == -1)
+        tp = np.sum(yhat[pos_ind] == 1)
+        fp = np.sum(yhat[neg_ind] == 1)
+        tn= np.sum(yhat[neg_ind] == -1)
+        fn = np.sum(yhat[pos_ind] == -1)
+
+        accuracy = _safe_divide(tp + tn, N)
+        precision = _safe_divide(tp, tp + fp)
+        recall = _safe_divide(tp, tp + fn)  # già TPR
+        specificity = _safe_divide(tn, tn + fp)
+        f1 = _safe_divide(2 * precision * recall, precision + recall)
+        balanced_accuracy = _safe_divide((recall + specificity), 2)
+        mcc_numerator = tp * tn - fp * fn
+        mcc_denominator = np.sqrt((tp + fp)*(tp + fn)*(tn + fp)*(tn + fn))
+        mcc = _safe_divide(mcc_numerator, mcc_denominator)
+
+        classification_report = classification_report(y, yhat, output_dict=True)
 
         rho_summary = {
             'rho': rho,
             'pretty_model': pretty,
             'string_model': pretty.get_string(),
-            'true_positives': true_positives,
-            'true_negatives': true_negatives,
-            'false_positives': false_positives,
-            'false_negatives': false_negatives,
+            'true_positives': tp,
+            'true_negatives': tn,
+            'false_positives': fp,
+            'false_negatives': fn,
             'mistakes': np.sum(y != yhat),
-            'error_rate': (false_positives + false_negatives) / N,
-            'true_positive_rate': true_positives / N_pos,
-            'false_positive_rate': false_positives / N_neg,
+            'error_rate': (fp + fn) / N,
+            'true_positive_rate': tp / N_pos,
+            'false_positive_rate': fp / N_neg,
             'L0_norm': np.sum(rho[slim_info['L0_reg_ind']]),
+            'L1_norm': np.sum(np.abs(rho[slim_info['L1_reg_ind']])),
+            'accuracy': accuracy,
+            'precision': precision,
+            'recall': recall,
+            'specificity': specificity,
+            'f1': f1,
+            'balanced_accuracy': balanced_accuracy,
+            'mcc': mcc,
+            'classification_report': classification_report
         }
 
         return(rho_summary)
