@@ -284,31 +284,40 @@ class slimGurobiHelpers:
             rho, slim_info['X_names'], slim_info['Y_name']
         )
 
-        y = np.asarray(Y, dtype=float).flatten()
-        pos = y == 1
-        neg = ~pos
-        yhat = np.sign(X.dot(rho))
+        #transform Y
+        y = np.array(Y.flatten(), dtype=float)  # or dtype=np.float64
+        pos_ind = y == 1
+        neg_ind = ~pos_ind
+        N = len(Y)
+        N_pos = np.sum(pos_ind)
+        N_neg = N - N_pos
+
+        #get predictions
+        yhat = X.dot(rho) > 0
+        yhat = np.array(yhat, dtype = float)
         yhat[yhat == 0] = -1
 
-        tp = (yhat[pos] == 1).sum()
-        fp = (yhat[neg] == 1).sum()
-        tn = (yhat[neg] == -1).sum()
-        fn = (yhat[pos] == -1).sum()
+        true_positives = np.sum(yhat[pos_ind] == 1)
+        false_positives = np.sum(yhat[neg_ind] == 1)
+        true_negatives= np.sum(yhat[neg_ind] == -1)
+        false_negatives = np.sum(yhat[pos_ind] == -1)
 
-        return {
+        rho_summary = {
             'rho': rho,
             'pretty_model': pretty,
             'string_model': pretty.get_string(),
-            'true_positives': tp,
-            'true_negatives': tn,
-            'false_positives': fp,
-            'false_negatives': fn,
-            'mistakes': (y != yhat).sum(),
-            'error_rate': (fp + fn) / len(Y),
-            'true_positive_rate': tp / pos.sum(),
-            'false_positive_rate': fp / neg.sum(),
-            'L0_norm': np.count_nonzero(rho[slim_info['L0_reg_ind']]),
+            'true_positives': true_positives,
+            'true_negatives': true_negatives,
+            'false_positives': false_positives,
+            'false_negatives': false_negatives,
+            'mistakes': np.sum(y != yhat),
+            'error_rate': (false_positives + false_negatives) / N,
+            'true_positive_rate': true_positives / N_pos,
+            'false_positive_rate': false_positives / N_neg,
+            'L0_norm': np.sum(rho[slim_info['L0_reg_ind']]),
         }
+
+        return(rho_summary)
 
     # ------------------------------------------------------------------
     # OVERALL SUMMARY
